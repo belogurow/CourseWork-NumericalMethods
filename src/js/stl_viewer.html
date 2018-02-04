@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>STL Viewer</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            font-family: monospace;
+            background-color: #6cff87;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /*info
+        /*	color: #fff;
+        /*	position: absolute;
+        /*	top: 10px
+        /*	width: 100%;
+        /*	text-align: center;
+        /*	z-index: 100;
+        /*	display:block;
+        */
+
+        /*a { color: skyblue }
+        /*span
+        /*	display: inline-block;
+        /*	width: 60px;
+        /*	float: left;
+        /*	text-align: center;
+
+    </style>
+</head>
+<body>
+<!--<div id="info"> -->
+<!--<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a>-->
+<!--STL loader test by <a href="https://github.com/aleeper">aleeper</a>. PR2 head from <a href="http://www.ros.org/wiki/pr2_description">www.ros.org</a>-->
+<!--</div>-->
+
+<script src="../library/three.js"></script>
+<script src="../library/STLLoader.js"></script>
+<script src="../library/STLExporter.js"></script>
+<script src="../library/OrbitControls.js"></script>
+<script type="text/javascript" src="../library/dat.gui.min.js"></script>
+<script src="../library/Detector.js"></script>
+<script src="../library/stats_min.js"></script>
+<script src="../library/THREE.CSG.js"></script>
+
+<script>
+    // GLOBAL VALUES
+    var CUBE = "../stl_models/cube.stl";
+    var LEG = "../stl_models/leg.stl";
+
+    var container, stats;
+    var camera, cameraTarget, scene, renderer;
+    var resultMesh, cubeSCG1, cubeSCG2, material;
+    var GUI;
+
+    // START
+    if (!Detector.webgl) Detector.addGetWebGLMessage();
+
+    init();
+    animate();
+
+    addGrid();
+    addMesh('1');
+    addGUI();
+
+    function addGrid() {
+        var grid = new THREE.GridHelper(20, 20, 0x888888, 0x888888);
+        grid.position.set(0, 0, 0);
+        scene.add(grid);
+    }
+
+    function addGUI() {
+        var GUIConfig = function () {
+            this.Operation = 1;
+            this.FileName = fileName;
+            this.Download = function () {
+                if (fileName.lastIndexOf('.stl') === -1) {
+                    fileName += '.stl';
+                }
+                calculateMesh(fileName, GUI.download.button);
+            }
+        };
+
+        var fileName = 'mesh';
+
+
+        GUI = new dat.GUI();
+        var config = new GUIConfig();
+
+        GUI['operation'] = GUI.add(config, 'Operation', {Union: 0, Intersection: 1, Subtraction: 2})
+            .onChange(function (value) {
+                console.log(value);
+                showMesh(value);
+            });
+
+        GUI['download'] = GUI.addFolder('Download to stl');
+        GUI['download'].add(config, 'FileName')
+            .onChange(function (value) {
+                fileName = value;
+            });
+        GUI['download'] = GUI['download'].add(config, 'Download');
+    }
+
+    function addMesh(operation) {
+        loadMesh(operation);
+    }
+
+    // LOADING MESH FROM *.STL FILE
+    function loadMesh(operation) {
+        var loader = new THREE.STLLoader();
+
+        loader.load(this.CUBE, function (geometry) {
+
+            material = new THREE.MeshPhongMaterial({color: 0xff5533, specular: 0x111111, shininess: 200});
+            var mesh = new THREE.Mesh(geometry, material);
+
+            mesh.position.set(-1, 0, 0);
+            // mesh.rotation.set( 0, 0, 0 );
+            // mesh.scale.set( 1, 1, 1 );
+
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            cubeSCG1 = THREE.CSG.fromMesh(mesh);
+        });
+
+        loader.load(LEG, function (geometry) {
+            material2 = new THREE.MeshPhongMaterial({color: 0xAAAAAA, specular: 0x222222, shininess: 200});
+            mesh = new THREE.Mesh(geometry, material2);
+
+            // mesh.position.set(-0.3, 0.5, 0.5);
+            mesh.position.set(0, 0, 0);
+            // mesh.rotation.set( 0, 0, 0 );
+            // mesh.scale.set(3, 3, 3);
+
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            cubeSCG2 = THREE.CSG.fromMesh(mesh);
+
+            // console.log(cubeSCG2);
+
+            showMesh(operation)
+        });
+
+
+
+    }
+
+    function showMesh(operation) {
+        if (resultMesh !== undefined) {
+            scene.remove(resultMesh);
+            //geometry.dispose();
+        }
+
+        var result;
+        switch (operation) {
+            case '0':
+            default:
+                result = cubeSCG1.union(cubeSCG2);
+                break;
+            case '1':
+                result = cubeSCG1.intersect(cubeSCG2);
+                break;
+            case '2':
+                result = cubeSCG1.subtract(cubeSCG2);
+                break;
+        }
+        resultMesh = THREE.CSG.toMesh(result, material);
+        //console.log(resultMesh);
+
+        scene.add(resultMesh);
+    }
+
+    function init() {
+
+        container = document.createElement('div');
+        document.body.appendChild(container);
+
+        // camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 15 );
+        // camera.position.set( 3, 0.15, 3 );
+
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 100);
+        camera.position.set(3, 5, 3);
+
+        cameraTarget = new THREE.Vector3(0, 0, 0);
+
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x72645b);
+        scene.fog = new THREE.Fog(0x72645b, 2, 15);
+
+        // Lights
+
+        scene.add(new THREE.HemisphereLight(0x443333, 0x111122));
+
+        addShadowedLight(1, 1, 1, 0xffffff, 1.35);
+        addShadowedLight(0.5, 1, -1, 0xffaa00, 1);
+        // renderer
+
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        // renderer.gammaInput = true;
+        // renderer.gammaOutput = true;
+        //
+        // renderer.shadowMap.enabled = true;
+        // renderer.shadowMap.renderReverseSided = false;
+
+        container.appendChild(renderer.domElement);
+
+        // stats
+
+        stats = new Stats();
+        container.appendChild(stats.dom);
+
+        //
+        var controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+        window.addEventListener('resize', onWindowResize, false);
+
+    }
+
+    function addShadowedLight(x, y, z, color, intensity) {
+
+        var directionalLight = new THREE.DirectionalLight(color, intensity);
+        directionalLight.position.set(x, y, z);
+        scene.add(directionalLight);
+
+        directionalLight.castShadow = true;
+
+        var d = 1;
+        directionalLight.shadow.camera.left = -d;
+        directionalLight.shadow.camera.right = d;
+        directionalLight.shadow.camera.top = d;
+        directionalLight.shadow.camera.bottom = -d;
+
+        directionalLight.shadow.camera.near = 1;
+        directionalLight.shadow.camera.far = 4;
+
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
+
+        directionalLight.shadow.bias = -0.005;
+
+    }
+
+    function onWindowResize() {
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+    }
+
+    function animate() {
+
+        requestAnimationFrame(animate);
+
+        render();
+        stats.update();
+
+    }
+
+    function render() {
+
+        var timer = Date.now() * 0.00015;
+
+        // camera.position.x = Math.cos( timer ) * 3;
+        // camera.position.z = Math.sin( timer ) * 3;
+        //
+        // mesh.position.x = Math.cos( timer ) * 0.1;
+        // mesh.position.z = Math.sin( timer ) * 0.1;
+
+        camera.lookAt(cameraTarget);
+
+        renderer.render(scene, camera);
+
+    }
+
+    function calculateMesh(fileName, button) {
+        var exporter = new THREE.STLExporter();
+        var text = exporter.parse(scene);
+
+        save(new Blob([text], {type: 'text/plain'}), fileName);
+    }
+
+    function save( blob, filename) {
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL( blob );
+        link.download = filename || 'data.json';
+        link.click();
+    }
+
+
+</script>
+</body>
+</html>
