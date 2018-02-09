@@ -38,6 +38,7 @@
 <!--</div>-->
 
 <script src="../library/three.js"></script>
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.js"></script>-->
 <script src="../library/STLLoader.js"></script>
 <script src="../library/STLExporter.js"></script>
 <script src="../library/OrbitControls.js"></script>
@@ -55,7 +56,7 @@
 
     var container, stats;
     var camera, cameraTarget, scene, renderer;
-    var resultMesh, cubeSCG1, cubeSCG2, material, controls;
+    var resultMesh, controls;
     var objects = {};
     var meshes = [];
     var GUI;
@@ -67,7 +68,7 @@
     animate();
 
     addGrid();
-    addMesh('1');
+    addMesh();
     addGUI();
 
     function addGrid() {
@@ -79,7 +80,7 @@
     function addGUI() {
         var GUIConfig = function () {
             // this.Objects1 = [1, 2 ,3];
-            this.Operation = 1;
+            this.Operation = 0;
             this.FileName = fileName;
             this.Download = function () {
                 if (fileName.lastIndexOf('.stl') === -1) {
@@ -98,7 +99,7 @@
         GUI['objects'] = GUI.addFolder('Objects');
         // GUI['objects'].add(config, 'Objects1');
 
-        GUI['operation'] = GUI.add(config, 'Operation', {Union: 0, Intersection: 1, Subtraction: 2})
+        GUI['operation'] = GUI.add(config, 'Operation', {Empty: 0, Union: 1, Intersection: 2, Subtraction: 3})
             .onChange(function (value) {
                 console.log(value);
                 showMesh(value);
@@ -112,12 +113,12 @@
         GUI['download']['button'] = GUI['download'].add(config, 'Download');
     }
 
-    function addMesh(operation) {
-        loadMesh(operation);
+    function addMesh() {
+        loadMesh();
     }
 
     // LOADING MESH FROM *.STL FILE
-    function loadMesh(operation) {
+    function loadMesh() {
         var loader = new THREE.STLLoader();
 
         loader.load(this.CUBE, function (geometry) {
@@ -132,7 +133,7 @@
             mesh.castShadow = true;
             mesh.receiveShadow = true;
 
-            cubeSCG1 = THREE.CSG.fromMesh(mesh);
+            // cubeSCG1 = THREE.CSG.fromMesh(mesh);
             scene.add(mesh);
 
             objects['CUBE'] = mesh;
@@ -151,7 +152,7 @@
             mesh.castShadow = true;
             mesh.receiveShadow = true;
 
-            cubeSCG2 = THREE.CSG.fromMesh(mesh);
+            // cubeSCG2 = THREE.CSG.fromMesh(mesh);
             scene.add(mesh);
 
             // console.log(cubeSCG2);
@@ -166,28 +167,44 @@
     }
 
     function showMesh(operation) {
-        if (resultMesh !== undefined) {
-            scene.remove(resultMesh);
-            //geometry.dispose();
-        }
+        // if (resultMesh !== undefined) {
+        //     scene.remove(resultMesh);
+        //     //geometry.dispose();
+        // }
 
-        var result;
-        switch (operation) {
-            case '0':
-            default:
-                result = cubeSCG1.union(cubeSCG2);
-                break;
-            case '1':
-                result = cubeSCG1.intersect(cubeSCG2);
-                break;
-            case '2':
-                result = cubeSCG1.subtract(cubeSCG2);
-                break;
-        }
-        resultMesh = THREE.CSG.toMesh(result, material);
-        //console.log(resultMesh);
+        if (operation === '0') {
 
-        scene.add(resultMesh);
+        } else {
+            if (meshes.length !== 2) {
+                throw new Error("Wrong size of objects array: " + meshes.length)
+            }
+
+            var mesh1 = meshes.pop(),
+                mesh2 = meshes.pop();
+            scene.remove(mesh1, mesh2);
+
+            var meshCSG1 = THREE.CSG.fromMesh(mesh1),
+                meshCSG2 = THREE.CSG.fromMesh(mesh2),
+                result;
+
+            switch (operation) {
+                case '1':
+                default:
+                    result = meshCSG1.union(meshCSG2);
+                    break;
+                case '2':
+                    result = meshCSG1.intersect(meshCSG2);
+                    break;
+                case '3':
+                    result = meshCSG1.subtract(meshCSG2);
+                    break;
+            }
+
+            var material = new THREE.MeshPhongMaterial({color: 0xFAFAFA, specular: 0x444444, shininess: 200});
+            resultMesh = THREE.CSG.toMesh(result, material);
+            meshes.push(resultMesh);
+            scene.add(resultMesh);
+        }
     }
 
     function init() {
