@@ -37,8 +37,7 @@
 <!--STL loader test by <a href="https://github.com/aleeper">aleeper</a>. PR2 head from <a href="http://www.ros.org/wiki/pr2_description">www.ros.org</a>-->
 <!--</div>-->
 
-<script src="../library/three.js"></script>
-<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.js"></script>-->
+<script type="text/javascript" src="../library/threejs.min.js"></script>
 <script src="../library/STLLoader.js"></script>
 <script src="../library/STLExporter.js"></script>
 <script src="../library/OrbitControls.js"></script>
@@ -49,7 +48,7 @@
 <script src="../library/stats_min.js"></script>
 <script src="../library/THREE.CSG.js"></script>
 
-<script>
+<script type="text/javascript">
     // GLOBAL VALUES
     var CUBE = "../stl_models/cube.stl";
     var LEG = "../stl_models/leg.stl";
@@ -58,8 +57,10 @@
     var camera, cameraTarget, scene, renderer;
     var resultMesh, controls;
     var objects = {};
-    var meshes = [];
     var GUI;
+    var meshes = [];
+    var meshesGroup = new THREE.Group();
+    var raycaster, INTERSECTED = false;
 
     // START
     if (!Detector.webgl) Detector.addGetWebGLMessage();
@@ -74,12 +75,13 @@
     function addGrid() {
         var grid = new THREE.GridHelper(20, 20, 0x888888, 0x888888);
         grid.position.set(0, 0, 0);
-        scene.add(grid);
+        meshesGroup.add(grid)
     }
 
     function addGUI() {
         var GUIConfig = function () {
             // this.Objects1 = [1, 2 ,3];
+            this.Wireframe = false;
             this.Operation = 0;
             this.FileName = fileName;
             this.Download = function () {
@@ -97,7 +99,13 @@
         var config = new GUIConfig();
 
         GUI['objects'] = GUI.addFolder('Objects');
-        // GUI['objects'].add(config, 'Objects1');
+        GUI['objects'].add(config, "Wireframe")
+            .onChange(function (value) {
+                meshes.forEach(function (mesh) {
+                    mesh.material.wireframe = value;
+                    mesh.material.transparent = value;
+                })
+            });
 
         GUI['operation'] = GUI.add(config, 'Operation', {Empty: 0, Union: 1, Intersection: 2, Subtraction: 3})
             .onChange(function (value) {
@@ -114,6 +122,7 @@
     }
 
     function addMesh() {
+        scene.add(meshesGroup);
         loadMesh();
     }
 
@@ -124,6 +133,12 @@
         loader.load(this.CUBE, function (geometry) {
 
             var material = new THREE.MeshPhongMaterial({color: 0x00FFFF, specular: 0x111111, shininess: 200});
+            // var material = new THREE.PointsMaterial({color: 0xFAFAFA});
+            // var material = new THREE.MeshLambertMaterial({wireframe: true});
+
+            // geometry = new THREE.EdgesGeometry( mesh.geometry ); // or WireframeGeometry
+            // material = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 1 } );
+
             var mesh = new THREE.Mesh(geometry, material);
 
             mesh.position.set(-1, 0, 0);
@@ -134,14 +149,25 @@
             mesh.receiveShadow = true;
 
             // cubeSCG1 = THREE.CSG.fromMesh(mesh);
-            scene.add(mesh);
+            // scene.add(mesh);
+            meshesGroup.add(mesh);
+            meshes.push(mesh);
 
             objects['CUBE'] = mesh;
-            meshes.push(mesh)
         });
 
-        loader.load(LEG, function (geometry) {
+        loader.load(CUBE, function (geometry) {
             var material2 = new THREE.MeshPhongMaterial({color: 0xAAAAAA, specular: 0x222222, shininess: 200});
+
+            // var wireframe = new THREE.WireframeGeometry( geometry );
+            // var line = new THREE.LineSegments( wireframe );
+            // line.material.depthTest = true;
+            // line.material.opacity = 1;
+            // line.material.transparent = false;
+            // line.position.x = 4;
+            // meshes.push(line);
+            // meshesGroup.add( line );
+
             var mesh = new THREE.Mesh(geometry, material2);
 
             // mesh.position.set(-0.3, 0.5, 0.5);
@@ -153,15 +179,16 @@
             mesh.receiveShadow = true;
 
             // cubeSCG2 = THREE.CSG.fromMesh(mesh);
-            scene.add(mesh);
+            // scene.add(mesh);
 
             // console.log(cubeSCG2);
 
             //showMesh(operation)
             meshes.push(mesh);
+            meshesGroup.add(mesh);
+
             objects['LEG'] = mesh;
         });
-
 
 
     }
@@ -179,9 +206,9 @@
                 throw new Error("Wrong size of objects array: " + meshes.length)
             }
 
-            var mesh1 = meshes.pop(),
-                mesh2 = meshes.pop();
-            scene.remove(mesh1, mesh2);
+            var mesh2 = meshes.pop(),
+                mesh1 = meshes.pop();
+            meshesGroup.remove(mesh1, mesh2);
 
             var meshCSG1 = THREE.CSG.fromMesh(mesh1),
                 meshCSG2 = THREE.CSG.fromMesh(mesh2),
@@ -201,9 +228,10 @@
             }
 
             var material = new THREE.MeshPhongMaterial({color: 0xFAFAFA, specular: 0x444444, shininess: 200});
+
             resultMesh = THREE.CSG.toMesh(result, material);
             meshes.push(resultMesh);
-            scene.add(resultMesh);
+            meshesGroup.add(resultMesh);
         }
     }
 
@@ -248,6 +276,8 @@
 
         stats = new Stats();
         container.appendChild(stats.dom);
+
+        raycaster = new THREE.Raycaster();
 
         //
         controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -310,8 +340,44 @@
         requestAnimationFrame(animate);
 
         render();
+        update();
         stats.update();
 
+    }
+
+    function update() {
+        try {
+            var mesh = meshes[0];
+            var objects = [meshes[1]];
+
+            var originPoint = mesh.position.clone();
+
+
+            for (var vertexIndex = 0; vertexIndex < mesh.geometry.attributes.position.count / 3; vertexIndex++) {
+
+                var position = vertexIndex * 3, array = mesh.geometry.attributes.position.array;
+                var localVertex = new THREE.Vector3(array[position], array[position + 1], array[position + 2]);
+
+                var globalVertex = localVertex.applyMatrix4(mesh.matrix);
+                var directionVector = globalVertex.sub(mesh.position);
+                // var angle = mesh.velocity.angleTo(directionVector);
+
+                // if (angle <= Math.PI / 2) {
+                if (true) {
+                    var ray = new THREE.Raycaster(originPoint, directionVector.clone().normalize());
+
+                    var collisionResults = ray.intersectObjects(objects);
+                    if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
+                        console.log(" Hit ");
+                        break
+                    } else {
+                    }
+
+                }
+            }
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     function render() {
