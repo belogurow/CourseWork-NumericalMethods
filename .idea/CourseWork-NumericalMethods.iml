@@ -5,5 +5,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="babylon" level="application" />
+    <orderEntry type="library" name="babylon.max" level="application" />
   </component>
 </module>
