@@ -2,17 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="3a164e83-f8bd-4443-8e63-f40b88e349c8" name="Default" comment="">
-      <change beforePath="" afterPath="$PROJECT_DIR$/src/js/collision.js" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/src/library/dat.gui.js" />
-      <change beforePath="$PROJECT_DIR$/.idea/CourseWork-NumericalMethods.iml" afterPath="$PROJECT_DIR$/.idea/CourseWork-NumericalMethods.iml" />
-      <change beforePath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" afterPath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change beforePath="$PROJECT_DIR$/src/js/babylon.html" afterPath="$PROJECT_DIR$/src/js/babylon.html" />
-      <change beforePath="$PROJECT_DIR$/src/js/stl_viewer.js" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/src/library/dat.gui.min.js" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/src/stl_models/Skin.stl" afterPath="$PROJECT_DIR$/src/stl_models/Skin.stl" />
-      <change beforePath="$PROJECT_DIR$/src/stl_models/skull.stl" afterPath="$PROJECT_DIR$/src/stl_models/skull.stl" />
-      <change beforePath="$PROJECT_DIR$/src/stl_models/stl_viewer.html" afterPath="$PROJECT_DIR$/src/js/csg.html" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -26,7 +16,7 @@
       <file leaf-file-name="babylon.html" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/js/babylon.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-3613">
+            <state relative-caret-position="585">
               <caret line="39" column="21" lean-forward="false" selection-start-line="39" selection-start-column="21" selection-end-line="39" selection-end-column="21" />
               <folding />
             </state>
@@ -46,8 +36,8 @@
       <file leaf-file-name="collision.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/js/collision.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="6525">
-              <caret line="435" column="53" lean-forward="false" selection-start-line="435" selection-start-column="53" selection-end-line="435" selection-end-column="53" />
+            <state relative-caret-position="6450">
+              <caret line="430" column="53" lean-forward="false" selection-start-line="430" selection-start-column="53" selection-end-line="430" selection-end-column="53" />
               <folding />
             </state>
           </provider>
@@ -373,7 +363,7 @@
       <workItem from="1519466067049" duration="11407000" />
       <workItem from="1519556574283" duration="5369000" />
       <workItem from="1519725087008" duration="24000" />
-      <workItem from="1519731645188" duration="104000" />
+      <workItem from="1519731645188" duration="381000" />
     </task>
     <task id="LOCAL-00001" summary="Added new functions">
       <created>1517773854707</created>
@@ -403,11 +393,18 @@
       <option name="project" value="LOCAL" />
       <updated>1519039108872</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Some modifications">
+      <created>1519731791412</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1519731791412</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="85257000" />
+    <option name="totallyTimeSpent" value="85534000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1280" height="800" extended-state="0" />
@@ -783,8 +780,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/js/collision.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="6525">
-          <caret line="435" column="53" lean-forward="false" selection-start-line="435" selection-start-column="53" selection-end-line="435" selection-end-column="53" />
+        <state relative-caret-position="6450">
+          <caret line="430" column="53" lean-forward="false" selection-start-line="430" selection-start-column="53" selection-end-line="430" selection-end-column="53" />
           <folding />
         </state>
       </provider>
@@ -799,7 +796,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/js/babylon.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-3613">
+        <state relative-caret-position="585">
           <caret line="39" column="21" lean-forward="false" selection-start-line="39" selection-start-column="21" selection-end-line="39" selection-end-column="21" />
           <folding />
         </state>
