@@ -349,7 +349,7 @@ function importMeshes(scene) {
 
 
     // Leg
-    BABYLON.SceneLoader.ImportMesh("", "../stl_models/", "Leg.stl", scene, function (newMeshes) {
+    BABYLON.SceneLoader.ImportMesh("", "../stl_models/", "bone4.stl", scene, function (newMeshes) {
         var mesh = newMeshes[0];
         mesh.setVerticesData(BABYLON.VertexBuffer.UVKind, []);
         // mesh.rotation.x = 270 * Math.PI / 180;
